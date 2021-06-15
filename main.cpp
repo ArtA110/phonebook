@@ -2,146 +2,162 @@
 #include<fstream>
 #include<string>
 using namespace std;
+
+const string FILE_NAME = "Contacts.csv";
+
 //CSV phonebook
-void addContact(const string& name)//Create a new phonebook or Open an existing phonebook and adding a user to it! (phonebook name pass in function)
+void addContact()//Create a new phonebook or Open an existing phonebook and adding a user to it! (phonebook name pass in function)
 {
-    fstream fi;
-    fi.open(name+".csv",ios::out | ios::app);
-    if(!fi.is_open())
+    fstream fin; // File stream variable
+    string contactName; // The name of the contact
+    string contactNumber; // The number of the contact
+    unsigned short int numberOfUserContactNumbers; // the amount of user contact numbers to be added
+
+    fin.open(FILE_NAME.c_str(),ios::out | ios::app);
+
+    //Check if the file is open, cancel function if it is not
+    if(!fin.is_open())
     {
-        cout<<"Error Creating/Opening file!\n";
+        cout << "Error Creating/Opening file!\n";
         return;
     }
 
-    string contactName;
-    string contactNumber;
-    short int numberOfNumbers;
-
-    cout<<"Enter the Name of user you want to Add: ";
+    cout<<"Enter the name of user you want to add: ";
     getline(cin,contactName);
 
-    cout<<"How many number do you wanna add for "<<contactName<<" : ";
-    cin>>numberOfNumbers;
+    cout << "How many contact numbers do you wanna add for " << contactName << " : ";
+    cin>>numberOfUserContactNumbers;
 
-    fi<<contactName;
+    fin << contactName;
 
-    while (!numberOfNumbers<1)
+    while (!numberOfUserContactNumbers < 1)
     {
-        cout<<"Enter Number of user you want to Add: ";
+        cout << "Enter the number of user you want to Add: ";
+
         cin>>contactNumber;
-        fi<<","<<contactNumber;//file is CSV(comma seprated values)
-        --numberOfNumbers;
+
+        fin << "," << contactNumber;//file is CSV(comma seprated values)
+
+        --numberOfUserContactNumbers;
     }
-    fi<<"\n";
+
+    fin << "\n";
     
-    fi.close();
+    fin.close();
 }
 
-bool showContact(const string& name)//Reading Existing phonebook!
+bool showContact()//Reading Existing phonebook!
 {
-    fstream fi;
-    fi.open(name+".csv",ios::in);
-    if(!fi.is_open())
+    fstream fin; // File stream variable
+    string line; // The line being read from the file
+
+    fin.open(FILE_NAME.c_str(),ios::in);
+
+    //Check if the file is open, cancel function if it is not
+    if(!fin.is_open())
     {
-        cout<<"Error Opening file! Maybe it does not eixst!\n";
+        cout << "Error Opening file! Maybe it does not eixst!\n";
         return false;//if there is no phonebook with that name , function returns false!
     }
 
-    string line;
-    while(getline(fi,line))//while there is a line in file put that line to string line variable
+    
+    while(getline(fin,line))//while there is a line in file put that line to string line variable
     {
-        cout<<line<<endl;
+        cout << line << endl;
     }
-    cout<<"==============================================\n";
+    cout << "==============================================\n";
 
-    fi.close();
+    fin.close();
     return true;
 }
 
-void searchContact(const string&name,const string& key)//Search by name or phone number
+void searchContact(const string& key)//Search by name or phone number
 {
-    fstream fi;
-    fi.open(name+".csv",ios::in);
-    if(!fi.is_open())
+    fstream fin; // File stream variable
+    string line; // The line being read from the file
+    bool found = false; // The condition if the contact has been found
+
+    //Check if the file is open, cancel function if it is not
+    fin.open(FILE_NAME.c_str(),ios::in);
+
+    if(!fin.is_open())
     {
         cout<<"Error Opening file! Maybe it does not eixst!\n";
         return;
-    }
+    }  
 
-    string line;
-    bool find=false;
-
-    while(getline(fi,line))
+    //Break the loop once at the end of the file, or if the contact has been found
+    while(getline(fin,line) && !found)
     {
         if(line.find(key)!=string::npos)//if there is key in that line, show the line
         {
             cout<<line<<endl;
-            find=true;
+            found=true;
         }
     }
 
-    if(!find)//if the key not found
+    if(!found)//if the key not found
         cout<<"NOT FOUND!\n";
 
-    fi.close();
+    fin.close();
 }
 
-void deleteContact(const string&name)
+void deleteContact()
 {
-    if(!showContact(name))//if phonebook is not exist terminate operation, if it exist show contacts of phonebook
+    unsigned int choice; // the choice from the user
+    fstream fin; // File stream variable
+    fstream fin2; // File stream variable
+    string line; // The line being read from the file
+
+    if(!showContact())//if phonebook is not exist terminate operation, if it exist show contacts of phonebook
     {
         cout<<"\nfile not found so the operation has been terminated!\n";
         return;
     }
 
-    cout<<"\n\nWhich one do you wanna delete (Starts from 1): ";
-    int choise;
-    cin>>choise;
+    cout << "\n\nWhich one do you wanna delete (Starts from 1): ";
+    cin>>choice;
     
-    fstream fi;
-    fi.open(name+".csv",ios::in);
-    if(!fi.is_open())
+    fin.open(FILE_NAME.c_str(),ios::in);
+
+    if(!fin.is_open())
     {
         cout<<"Unknown Error!\n";
         return;
     }
 
-    fstream fi2;
-    fi2.open("Temp.csv",ios::out | ios::app);
+    fin2.open("Temp.csv",ios::out | ios::app);
 
-    string line;
-    while(getline(fi,line))//copy every line of fi file to fi2 file except a line that should remove
+    while(getline(fin,line))//copy every line of fi file to fi2 file except a line that should remove
     {
-        --choise;
-        if(choise==0)
+        --choice;
+        if(choice==0)
             continue;
-        fi2<<line+"\n";
+        fin2 << line + "\n";
     }
 
-    fi.close();
+    fin.close();
 
-    string N=name+".csv";
-
-    if (fi2.tellg()==0)//Is the new file Empty?, if it's Empty delete that phonebook
+    if (fin2.tellg()==0)//Is the new file Empty?, if it's Empty delete that phonebook
     {
         remove("Temp.csv");
-        remove(N.c_str());
-        fi2.close();
+        remove(FILE_NAME.c_str());
+        fin2.close();
         return;
     }
 
-    fi2.close();
+    fin2.close();
 
-    remove(N.c_str());//remove old file
-    rename("Temp.csv",N.c_str());//rename new file to the name of old file
+    remove(FILE_NAME.c_str());//remove old file
+    rename("Temp.csv",FILE_NAME.c_str());//rename new file to the name of old file
 }
 
 int main()
 {
-    //addContact("Contacts");
-    //showContact("Contacts");
-    //searchContact("Contacts","my number");
-    //deleteContact("Contacts");
+    //addContact();
+    //showContact();
+    //searchContact("my number");
+    //deleteContact();
 }
 
 /*
